@@ -454,9 +454,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 156
   height: 156
-  heightScale: 25
-  terrainScale: 3
+  heightScale: 10
+  terrainScale: 1
   cantMontains: 10
+  cantHills: 5
+  cantRios: 1
 --- !u!4 &643458439
 Transform:
   m_ObjectHideFlags: 0

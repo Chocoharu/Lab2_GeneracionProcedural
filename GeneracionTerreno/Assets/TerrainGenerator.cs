@@ -9,6 +9,8 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField] private float heightScale;
     [SerializeField] private float terrainScale;
     [SerializeField] private int cantMontains;
+    [SerializeField] private int cantHills;
+    [SerializeField] private int cantRios;
 
     void Start()
     {
@@ -28,8 +30,32 @@ public class TerrainGenerator : MonoBehaviour
 
             AgenteMontaña(rx, ry, poder, radio);
         }
+        // 3b. Agregar colinas
+        for (int i = 0; i < cantHills; i++)
+        {
+            int rx = Random.Range(0, width);
+            int ry = Random.Range(0, height);
+            float poder = Random.Range(0.05f, 0.15f); // colinas más bajas
+            int radio = Random.Range(8, 20);          // colinas más anchas
+            AgenteColina(rx, ry, poder, radio);
+        }
+        // 3c. Agregar ríos
+        for (int i = 0; i < cantRios; i++)
+        {
+            // Río de arriba a abajo, posición aleatoria en X
+            int x0 = Random.Range(width / 4, 3 * width / 4);
+            int y0 = 0;
+            int x1 = Random.Range(width / 4, 3 * width / 4);
+            int y1 = height - 1;
+            int ancho = 3; // ancho del río
+            float profundidad = 0.2f; // profundidad del río
+            AgenteRio(x0, y0, x1, y1, ancho, profundidad);
+        }
 
-        // 4. Suavizar el heightmap
+        // 4. Agregar playa
+        AgentePlaya(5, 0.1f);
+
+        // 5. Suavizar el heightmap
         SuavizarHeightmap(5);
 
         CrearMesh();
@@ -111,6 +137,73 @@ public class TerrainGenerator : MonoBehaviour
                 {
                     float alturaExtra = poder * (1 - dist / radio);
                     heightmap[x, y] += alturaExtra;
+                }
+            }
+        }
+    }
+    void AgentePlaya(int anchoPlaya, float alturaPlaya)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                // Distancia mínima al borde
+                int distBorde = Mathf.Min(x, y, width - 1 - x, height - 1 - y);
+                if (distBorde < anchoPlaya)
+                {
+                    // Interpolación suave entre la altura original y la altura de playa
+                    float t = 1f - (distBorde / (float)anchoPlaya);
+                    heightmap[x, y] = Mathf.Lerp(heightmap[x, y], alturaPlaya, t);
+                }
+            }
+        }
+    }
+    void AgenteColina(int cx, int cy, float poder, int radio)
+    {
+        for (int dx = -radio; dx <= radio; dx++)
+        {
+            for (int dy = -radio; dy <= radio; dy++)
+            {
+                int x = cx + dx;
+                int y = cy + dy;
+                if (x < 0 || x >= width || y < 0 || y >= height) continue;
+
+                float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                if (dist < radio)
+                {
+                    // Colinas más suaves (curva cuadrática)
+                    float alturaExtra = poder * Mathf.Pow(1 - dist / radio, 2);
+                    heightmap[x, y] += alturaExtra;
+                }
+            }
+        }
+    }
+    void AgenteRio(int x0, int y0, int x1, int y1, int ancho, float profundidad)
+    {
+        int pasos = Mathf.Max(Mathf.Abs(x1 - x0), Mathf.Abs(y1 - y0));
+        for (int i = 0; i <= pasos; i++)
+        {
+            float t = i / (float)pasos;
+            // Interpolación lineal + ruido para hacer el río sinuoso
+            float nx = Mathf.Lerp(x0, x1, t) + Mathf.PerlinNoise(i * 0.1f, 0) * 6f - 3f;
+            float ny = Mathf.Lerp(y0, y1, t) + Mathf.PerlinNoise(0, i * 0.1f) * 6f - 3f;
+            int cx = Mathf.RoundToInt(nx);
+            int cy = Mathf.RoundToInt(ny);
+
+            for (int dx = -ancho; dx <= ancho; dx++)
+            {
+                for (int dy = -ancho; dy <= ancho; dy++)
+                {
+                    int x = cx + dx;
+                    int y = cy + dy;
+                    if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (dist < ancho)
+                    {
+                        // Rebaja la altura para simular el cauce
+                        float rebaja = profundidad * (1 - dist / ancho);
+                        heightmap[x, y] -= rebaja;
+                    }
                 }
             }
         }
