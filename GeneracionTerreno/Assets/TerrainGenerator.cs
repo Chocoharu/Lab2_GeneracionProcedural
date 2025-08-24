@@ -1,16 +1,44 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class TerrainGenerator : MonoBehaviour
 {
     [Header("Configuración del mapa")]
-    public int width;
-    public int height;
-    public float[,] heightmap;
+    [SerializeField] private int width;
+    [SerializeField] private int height;
+    private float[,] heightmap;
     [SerializeField] private float heightScale;
     [SerializeField] private float terrainScale;
+
+    [Header("Parámetros de generación")]
     [SerializeField] private int cantMontains;
+    [SerializeField] private float poderMontanasMin;
+    [SerializeField] private float poderMontanasMax;
+    [SerializeField] private int radioMontanasMin;
+    [SerializeField] private int radioMontanasMax;
+
+    [Header("Parámetros de colinas")]
     [SerializeField] private int cantHills;
+    [SerializeField] private float poderColinasMin;
+    [SerializeField] private float poderColinasMax;
+    [SerializeField] private int radioColinasMin;
+    [SerializeField] private int radioColinasMax;
+
+    [Header("Parámetros de ríos")]
     [SerializeField] private int cantRios;
+    [SerializeField] private int anchoRio;
+    [SerializeField] private float profundidadRio;
+
+    [Header("Parámetros de costa")]
+    [SerializeField] private float escalaRuidoCosta;
+    [SerializeField] private float intensidadRuidoCosta;
+
+    [Header("Parámetros de playa")]
+    [SerializeField] private int anchoPlaya;
+    [SerializeField] private float alturaPlaya;
+
+    [Header("Parámetros de suavizado")]
+    [SerializeField] private int iteracionesSuavizado;
 
     void Start()
     {
@@ -25,47 +53,48 @@ public class TerrainGenerator : MonoBehaviour
         {
             int rx = Random.Range(0, width);
             int ry = Random.Range(0, height);
-            float poder = Random.Range(0.2f, 0.6f); // qué tan alta
-            int radio = Random.Range(5, 15);        // tamaño de la montaña
+            float poder = Random.Range(poderMontanasMin, poderMontanasMax);
+            int radio = Random.Range(radioMontanasMin, radioMontanasMax);
 
             AgenteMontaña(rx, ry, poder, radio);
         }
+
         // 3b. Agregar colinas
         for (int i = 0; i < cantHills; i++)
         {
             int rx = Random.Range(0, width);
             int ry = Random.Range(0, height);
-            float poder = Random.Range(0.05f, 0.15f); // colinas más bajas
-            int radio = Random.Range(8, 20);          // colinas más anchas
+            float poder = Random.Range(poderColinasMin, poderColinasMax);
+            int radio = Random.Range(radioColinasMin, radioColinasMax);
+
             AgenteColina(rx, ry, poder, radio);
         }
+
         // 3c. Agregar ríos
         for (int i = 0; i < cantRios; i++)
         {
-            // Río de arriba a abajo, posición aleatoria en X
             int x0 = Random.Range(width / 4, 3 * width / 4);
             int y0 = 0;
             int x1 = Random.Range(width / 4, 3 * width / 4);
             int y1 = height - 1;
-            int ancho = 3; // ancho del río
-            float profundidad = 0.2f; // profundidad del río
-            AgenteRio(x0, y0, x1, y1, ancho, profundidad);
+
+            AgenteRio(x0, y0, x1, y1, anchoRio, profundidadRio);
         }
 
         // 4. Agregar playa
-        AgentePlaya(5, 0.1f);
+        AgentePlaya(anchoPlaya, alturaPlaya);
 
         // 5. Suavizar el heightmap
-        SuavizarHeightmap(5);
+        SuavizarHeightmap(iteracionesSuavizado);
 
         CrearMesh();
+
+        AplicarColores();
     }
 
     void GenerarCosta()
     {
         float maxDist = Vector2.Distance(Vector2.zero, new Vector2(width / 2, height / 2));
-        float escalaRuido = 0.1f; // cuanto más chico, más grandes las formas
-        float intensidadRuido = 0.4f; // cuánto afecta el ruido
 
         for (int x = 0; x < width; x++)
         {
@@ -75,21 +104,16 @@ public class TerrainGenerator : MonoBehaviour
                 float distY = y - height / 2f;
                 float distCentro = Mathf.Sqrt(distX * distX + distY * distY);
 
-                // 1 en el centro, 0 en los bordes
                 float alturaBase = 1f - (distCentro / maxDist);
+                float ruido = Mathf.PerlinNoise(x * escalaRuidoCosta, y * escalaRuidoCosta);
+                alturaBase += (ruido - 0.5f) * intensidadRuidoCosta;
 
-                // Agregar ruido Perlin
-                float ruido = Mathf.PerlinNoise(x * escalaRuido, y * escalaRuido);
-                alturaBase += (ruido - 0.5f) * intensidadRuido;
-
-
-                // Clamping para evitar valores negativos
                 alturaBase = Mathf.Clamp01(alturaBase);
-
                 heightmap[x, y] = alturaBase;
             }
         }
     }
+
     void SuavizarHeightmap(int iteraciones)
     {
         for (int it = 0; it < iteraciones; it++)
@@ -120,6 +144,7 @@ public class TerrainGenerator : MonoBehaviour
             heightmap = temp;
         }
     }
+
     void AgenteMontaña(int cx, int cy, float poder, int radio)
     {
         for (int dx = -radio; dx <= radio; dx++)
@@ -129,7 +154,6 @@ public class TerrainGenerator : MonoBehaviour
                 int x = cx + dx;
                 int y = cy + dy;
 
-                // Asegurar que no se salga del mapa
                 if (x < 0 || x >= width || y < 0 || y >= height) continue;
 
                 float dist = Mathf.Sqrt(dx * dx + dy * dy);
@@ -141,23 +165,23 @@ public class TerrainGenerator : MonoBehaviour
             }
         }
     }
+
     void AgentePlaya(int anchoPlaya, float alturaPlaya)
     {
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                // Distancia mínima al borde
                 int distBorde = Mathf.Min(x, y, width - 1 - x, height - 1 - y);
                 if (distBorde < anchoPlaya)
                 {
-                    // Interpolación suave entre la altura original y la altura de playa
                     float t = 1f - (distBorde / (float)anchoPlaya);
                     heightmap[x, y] = Mathf.Lerp(heightmap[x, y], alturaPlaya, t);
                 }
             }
         }
     }
+
     void AgenteColina(int cx, int cy, float poder, int radio)
     {
         for (int dx = -radio; dx <= radio; dx++)
@@ -171,20 +195,19 @@ public class TerrainGenerator : MonoBehaviour
                 float dist = Mathf.Sqrt(dx * dx + dy * dy);
                 if (dist < radio)
                 {
-                    // Colinas más suaves (curva cuadrática)
                     float alturaExtra = poder * Mathf.Pow(1 - dist / radio, 2);
                     heightmap[x, y] += alturaExtra;
                 }
             }
         }
     }
+
     void AgenteRio(int x0, int y0, int x1, int y1, int ancho, float profundidad)
     {
         int pasos = Mathf.Max(Mathf.Abs(x1 - x0), Mathf.Abs(y1 - y0));
         for (int i = 0; i <= pasos; i++)
         {
             float t = i / (float)pasos;
-            // Interpolación lineal + ruido para hacer el río sinuoso
             float nx = Mathf.Lerp(x0, x1, t) + Mathf.PerlinNoise(i * 0.1f, 0) * 6f - 3f;
             float ny = Mathf.Lerp(y0, y1, t) + Mathf.PerlinNoise(0, i * 0.1f) * 6f - 3f;
             int cx = Mathf.RoundToInt(nx);
@@ -200,7 +223,6 @@ public class TerrainGenerator : MonoBehaviour
                     float dist = Mathf.Sqrt(dx * dx + dy * dy);
                     if (dist < ancho)
                     {
-                        // Rebaja la altura para simular el cauce
                         float rebaja = profundidad * (1 - dist / ancho);
                         heightmap[x, y] -= rebaja;
                     }
@@ -208,50 +230,99 @@ public class TerrainGenerator : MonoBehaviour
             }
         }
     }
+
     void CrearMesh()
     {
         Mesh mesh = new Mesh();
         Vector3[] vertices = new Vector3[width * height];
-        int[] triangles = new int[(width - 1) * (height - 1) * 6];
+        List<int> trianglesList = new List<int>();
+        Vector2[] uvs = new Vector2[width * height];
 
-        // Crear vértices
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
                 float z = heightmap[x, y] * heightScale;
-                vertices[x + y * width] = new Vector3(x * terrainScale, z, y * terrainScale);
+                int idx = x + y * width;
+                vertices[idx] = new Vector3(x * terrainScale, z, y * terrainScale);
+                uvs[idx] = new Vector2(x / (float)(width - 1), y / (float)(height - 1));
+
             }
         }
 
-        // Crear triángulos
-        int t = 0;
+        float radioIsla = Mathf.Min(width, height) * 0.5f * 0.95f;
+        float centroX = width / 2f;
+        float centroY = height / 2f;
+
         for (int x = 0; x < width - 1; x++)
         {
             for (int y = 0; y < height - 1; y++)
             {
-                int i = x + y * width;
-                // Primer triángulo
-                triangles[t++] = i;
-                triangles[t++] = i + width;
-                triangles[t++] = i + width + 1;
-                // Segundo triángulo
-                triangles[t++] = i;
-                triangles[t++] = i + width + 1;
-                triangles[t++] = i + 1;
+                float cx = x + 0.5f - centroX;
+                float cy = y + 0.5f - centroY;
+                float dist = Mathf.Sqrt(cx * cx + cy * cy);
+
+                if (dist < radioIsla)
+                {
+                    int i = x + y * width;
+                    trianglesList.Add(i);
+                    trianglesList.Add(i + width);
+                    trianglesList.Add(i + width + 1);
+                    trianglesList.Add(i);
+                    trianglesList.Add(i + width + 1);
+                    trianglesList.Add(i + 1);
+                }
             }
         }
 
         mesh.vertices = vertices;
-        mesh.triangles = triangles;
+        mesh.triangles = trianglesList.ToArray();
+        mesh.uv = uvs;
         mesh.RecalculateNormals();
 
-        // Asignar el mesh a un MeshFilter y MeshRenderer
         MeshFilter mf = gameObject.GetComponent<MeshFilter>();
         if (mf == null) mf = gameObject.AddComponent<MeshFilter>();
         mf.mesh = mesh;
 
         MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();
         if (mr == null) mr = gameObject.AddComponent<MeshRenderer>();
+    }
+    void AplicarColores()
+    {
+        MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();
+        if (mr == null) mr = gameObject.AddComponent<MeshRenderer>();
+
+        Material material = mr.material;
+        if (material == null)
+        {
+            material = new Material(Shader.Find("Standard"));
+            mr.material = material;
+        }
+
+        Texture2D texture = new Texture2D(width, height);
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                float altura = heightmap[x, y];
+                Color color;
+
+                if (altura < 0.3f) // Agua
+                    color = Color.blue;
+                else if (altura < 0.4f) // Playa
+                    color = Color.yellow;
+                else if (altura < 0.6f) // Tierra
+                    color = Color.green;
+                else if (altura < 0.8f) // Montañas
+                    color = Color.gray;
+                else // Picos nevados
+                    color = Color.white;
+
+                texture.SetPixel(x, y, color);
+            }
+        }
+
+        texture.Apply();
+        material.mainTexture = texture;
     }
 }
