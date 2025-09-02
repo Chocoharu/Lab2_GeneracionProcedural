@@ -393,7 +393,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &643458438
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -492,6 +492,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &987235744
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 987235746}
+  - component: {fileID: 987235745}
+  m_Layer: 0
+  m_Name: Lsystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &987235745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 987235744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d882852882b450446a28e46c578af514, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  axiom: X
+  iterations: 5
+  angle: 22.5
+  length: 3
+  rules:
+  - symbol: 88
+    replacement: F-[[X]+X]+F[+FX]-X
+  - symbol: 70
+    replacement: FF
+--- !u!4 &987235746
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 987235744}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1119039866
 GameObject:
   m_ObjectHideFlags: 0
@@ -503,7 +556,7 @@ GameObject:
   - component: {fileID: 1119039868}
   - component: {fileID: 1119039869}
   m_Layer: 0
-  m_Name: CoastlineAgent
+  m_Name: WorldGenerator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -533,13 +586,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 1119039866}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 177318a33c10fb54e9e947bc397dd6c3, type: 3}
+  m_Script: {fileID: 11500000, guid: 74033526cb2ae1448a15cfa175964f5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 50
-  depth: 50
-  tokenLimit: 8
-  initialTokens: 300
+  width: 128
+  depth: 128
+  tokenLimit: 10
+  initialTokens: 1000
+  beachTokens: 400
+  beachSmoothRadius: 3
+  mountainTokens: 700
+  mountainHeightIncrement: 0.06
+  mountainSmoothRadius: 1
+  mountainDirectionChangeInterval: 1
   terrain: {fileID: 1486747009}
 --- !u!1 &1486747007
 GameObject:
@@ -644,3 +703,4 @@ SceneRoots:
   - {fileID: 643458439}
   - {fileID: 1119039868}
   - {fileID: 1486747010}
+  - {fileID: 987235746}
