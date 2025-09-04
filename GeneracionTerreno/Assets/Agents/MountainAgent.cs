@@ -33,14 +33,16 @@ public class MountainAgent
             // Cambiar dirección cada cierto número de tokens
             if (i % directionChangeInterval == 0)
             {
-                direction = RotateDirection(direction, UnityEngine.Random.value > 0.5f ? 45 : -45);
+                float angle = Random.Range(-45f, 45f); // Rango más natural
+                direction = RotateDirection(direction, angle);
+                if (direction == Vector2Int.zero) direction = RandomDirection();
             }
         }
     }
 
     private void RaiseWedge(Vector2Int location, Vector2Int direction, float increment)
     {
-        int radius = 2; // grosor de la montaña
+        int radius = 4; // grosor de la montaña
         for (int x = -radius; x <= radius; x++)
         {
             for (int y = -radius; y <= radius; y++)
@@ -70,15 +72,16 @@ public class MountainAgent
         return dirs[UnityEngine.Random.Range(0, dirs.Length)];
     }
 
-    private Vector2Int RotateDirection(Vector2Int dir, int degrees)
+    private Vector2Int RotateDirection(Vector2Int dir, float degrees)
     {
         float rad = degrees * Mathf.Deg2Rad;
         float cos = Mathf.Cos(rad);
         float sin = Mathf.Sin(rad);
 
-        int newX = Mathf.RoundToInt(dir.x * cos - dir.y * sin);
-        int newY = Mathf.RoundToInt(dir.x * sin + dir.y * cos);
+        float newX = dir.x * cos - dir.y * sin;
+        float newY = dir.x * sin + dir.y * cos;
 
-        return new Vector2Int(newX, newY);
+        Vector2 v = new Vector2(newX, newY).normalized;
+        return new Vector2Int(Mathf.RoundToInt(v.x), Mathf.RoundToInt(v.y));
     }
 }

@@ -71,11 +71,23 @@ public class CoastAgent
     private float EvaluateScore(Vector2Int cell, CoastAgentInstance agent, float[,] heightmap)
     {
         float score = 0f;
+
         if (heightmap[cell.x, cell.y] == 0f) score += 1f;
+
         Vector2 v = ((Vector2)(cell - agent.position)).normalized;
         Vector2 d = ((Vector2)agent.direction).normalized;
         score += Vector2.Dot(v, d) * 0.5f;
-        score += Random.value * 0.2f;
+
+        // Más peso al ruido Perlin
+        score += Mathf.PerlinNoise(cell.x * 0.15f, cell.y * 0.15f) * 1.2f;
+
+        // Sesgo radial hacia el centro
+        float cx = width / 2f;
+        float cy = depth / 2f;
+        float distToCenter = Vector2.Distance(new Vector2(cell.x, cell.y), new Vector2(cx, cy));
+        float maxDist = Mathf.Min(width, depth) * 0.5f;
+        score += (1f - (distToCenter / maxDist)) * 1.0f; // favorece puntos más centrales
+
         return score;
     }
 
@@ -106,10 +118,14 @@ public class CoastAgent
     {
         return new List<Vector2Int>
         {
-            p + Vector2Int.up,
-            p + Vector2Int.down,
-            p + Vector2Int.left,
-            p + Vector2Int.right
+            p + new Vector2Int(1, 0),
+            p + new Vector2Int(-1, 0),
+            p + new Vector2Int(0, 1),
+            p + new Vector2Int(0, -1),
+            p + new Vector2Int(1, 1),
+            p + new Vector2Int(-1, -1),
+            p + new Vector2Int(1, -1),
+            p + new Vector2Int(-1, 1)
         };
     }
 }

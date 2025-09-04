@@ -67,7 +67,11 @@ public class BeachAgent
             {
                 int nx = Mathf.Clamp(center.x + x, 0, map.GetLength(0) - 1);
                 int ny = Mathf.Clamp(center.y + y, 0, map.GetLength(1) - 1);
-                map[nx, ny] = Mathf.Lerp(minHeight, maxHeight, Random.value);
+
+                float dist = Mathf.Sqrt(x * x + y * y) / radius; // 0 en centro, 1 en borde
+                float targetHeight = Mathf.Lerp(maxHeight, minHeight, dist);
+
+                map[nx, ny] = Mathf.Lerp(map[nx, ny], targetHeight, 0.7f);
             }
         }
     }

@@ -107,4 +107,25 @@ public class SmoothAgent
         }
         return sum / count;
     }
+    public void SuavizadoGlobal(float[,] map, int repeticiones)
+    {
+        int w = map.GetLength(0);
+        int h = map.GetLength(1);
+
+        for (int r = 0; r < repeticiones; r++)
+        {
+            for (int x = 1; x < w - 1; x++)
+            {
+                for (int y = 1; y < h - 1; y++)
+                {
+                    float avg =
+                        (map[x, y] +
+                         map[x - 1, y] + map[x + 1, y] +
+                         map[x, y - 1] + map[x, y + 1]) / 5f;
+
+                    map[x, y] = Mathf.Lerp(map[x, y], avg, 0.5f);
+                }
+            }
+        }
+    }
 }

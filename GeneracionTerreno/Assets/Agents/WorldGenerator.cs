@@ -1,30 +1,35 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class WorldGenerator : MonoBehaviour
 {
     [Header("Mapa 3D")]
-    public int width;
-    public int depth;
-    public int tokenLimit;
-    public int initialTokens;
+    public int width = 128;
+    public int depth = 128;
+    public int tokenLimit = 12;
+    public int initialTokens = 700;
 
     [Header("Playas")]
-    public int beachTokens;
-    public int beachSmoothRadius;
+    public int beachTokens = 250;
+    public int beachSmoothRadius = 5;
 
     [Header("Montañas")]
-    public int mountainTokens;
-    public float mountainHeightIncrement;
-    public int mountainSmoothRadius;
-    public int mountainDirectionChangeInterval;
+    public int mountainTokens = 350;
+    public float mountainHeightIncrement = 0.025f;
+    public int mountainSmoothRadius = 2;
+    public int mountainDirectionChangeInterval = 15;
 
     private float[,] heightmap;
     public Terrain terrain;
 
     void Start()
     {
+        int resolution = Mathf.ClosestPowerOfTwo(Mathf.Max(width, depth) - 1) + 1;
+        resolution += 1;
+
         // --- Inicializar mapa ---
-        heightmap = new float[width, depth];
+        heightmap = new float[resolution, resolution];
+        width = depth = resolution;
 
         // --- Generar línea de costa ---
         CoastAgent coastGen = new CoastAgent(width, depth, tokenLimit);
@@ -33,11 +38,24 @@ public class WorldGenerator : MonoBehaviour
         // --- Rellenar tierra ---
         RellenarInterior();
 
-        // --- Generar playas ---
-        Vector2Int beachStart = new Vector2Int(width / 2, 0); // borde inferior
-        SmoothAgent sAgent = new SmoothAgent(heightmap, beachStart, beachTokens);
-        BeachAgent beach = new BeachAgent(beachStart, beachTokens, beachSmoothRadius, sAgent);
-        beach.GenerateBeach(heightmap);
+        // --- Forzar bordes a nivel del mar ---
+        ForzarBordesMar(heightmap, 0.05f);
+
+        // --- Recopilar todos los puntos de costa ---
+        List<Vector2Int> coastPoints = new List<Vector2Int>();
+        for (int x = 0; x < width; x++)
+            for (int z = 0; z < depth; z++)
+                if (heightmap[x, z] <= 0.12f)
+                    coastPoints.Add(new Vector2Int(x, z));
+
+        // --- Generar playas desde varios puntos de la costa ---
+        SmoothAgent sAgent = new SmoothAgent(heightmap, coastPoints[0], beachTokens);
+        int beachTokensPerAgent = Mathf.Max(1, beachTokens / coastPoints.Count);
+        foreach (var p in coastPoints)
+        {
+            BeachAgent beach = new BeachAgent(p, beachTokensPerAgent, beachSmoothRadius, sAgent);
+            beach.GenerateBeach(heightmap);
+        }
 
         // --- Generar montañas ---
         MountainAgent mountain = new MountainAgent(heightmap, sAgent);
@@ -49,6 +67,12 @@ public class WorldGenerator : MonoBehaviour
             smoothRadius: mountainSmoothRadius,
             directionChangeInterval: mountainDirectionChangeInterval
         );
+
+        // --- Suavizado global más fuerte ---
+        sAgent.SuavizadoGlobal(heightmap, 1);
+
+        // --- Normalizar valores antes de aplicar ---
+        //NormalizarTerreno(heightmap);
 
         // --- Aplicar al terreno 3D ---
         AplicarAlTerrain();
@@ -65,7 +89,6 @@ public class WorldGenerator : MonoBehaviour
             }
         }
     }
-
     void AplicarAlTerrain()
     {
         if (terrain == null)
@@ -74,19 +97,41 @@ public class WorldGenerator : MonoBehaviour
             return;
         }
 
-        // Unity espera [height, width]
-        float[,] heights = new float[depth, width];
-        for (int x = 0; x < width; x++)
+        // Asegura que el heightmap y la resolución coincidan
+        int resolution = Mathf.ClosestPowerOfTwo(Mathf.Max(width, depth)) + 1;
+        terrain.terrainData.heightmapResolution = resolution;
+
+        // Si el heightmap no es cuadrado, ajusta el array
+        float[,] heights = new float[resolution, resolution];
+        for (int x = 0; x < resolution; x++)
         {
-            for (int z = 0; z < depth; z++)
+            for (int z = 0; z < resolution; z++)
             {
-                heights[z, x] = heightmap[x, z];
+                int hx = Mathf.Clamp(x, 0, width - 1);
+                int hz = Mathf.Clamp(z, 0, depth - 1);
+                heights[z, x] = heightmap[hx, hz];
             }
         }
 
-        // Configurar el terreno
-        terrain.terrainData.heightmapResolution = Mathf.Max(width, depth);
-        terrain.terrainData.size = new Vector3(width, 20, depth); // 20 = altura máxima
+        terrain.terrainData.size = new Vector3(width, 100, depth);
         terrain.terrainData.SetHeights(0, 0, heights);
+    }
+    void ForzarBordesMar(float[,] map, float mar = 0.0f)
+    {
+        int w = map.GetLength(0);
+        int h = map.GetLength(1);
+
+        // Bordes horizontales
+        for (int x = 0; x < w; x++)
+        {
+            map[x, 0] = mar;
+            map[x, h - 1] = mar;
+        }
+        // Bordes verticales
+        for (int y = 0; y < h; y++)
+        {
+            map[0, y] = mar;
+            map[w - 1, y] = mar;
+        }
     }
 }

@@ -508,7 +508,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &987235745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -561,7 +561,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1119039868
 Transform:
   m_ObjectHideFlags: 0
@@ -589,15 +589,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74033526cb2ae1448a15cfa175964f5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 128
-  depth: 128
-  tokenLimit: 10
+  width: 150
+  depth: 150
+  tokenLimit: 3
   initialTokens: 1000
-  beachTokens: 400
-  beachSmoothRadius: 3
-  mountainTokens: 700
-  mountainHeightIncrement: 0.06
-  mountainSmoothRadius: 1
+  beachTokens: 250
+  beachSmoothRadius: 2
+  mountainTokens: 100
+  mountainHeightIncrement: 0.015
+  mountainSmoothRadius: 3
   mountainDirectionChangeInterval: 1
   terrain: {fileID: 1486747009}
 --- !u!1 &1486747007
@@ -617,7 +617,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!154 &1486747008
 TerrainCollider:
   m_ObjectHideFlags: 0
