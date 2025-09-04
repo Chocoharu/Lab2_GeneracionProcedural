@@ -6,13 +6,17 @@ public class BeachAgent
     public int tokens;            // Energía (pasos que puede dar)
     public int walkLength;        // Cuánto avanza tierra adentro
     private SmoothAgent smoothAgent; // Agente de suavizado
+    private float minHeight;
+    private float maxHeight;
 
-    public BeachAgent(Vector2Int startPos, int tokenCount, int walk, SmoothAgent sAgent)
+    public BeachAgent(Vector2Int startPos, int tokenCount, int walk, SmoothAgent sAgent, float minHeight, float maxHeight)
     {
         position = startPos;
         tokens = tokenCount;
         walkLength = walk;
         smoothAgent = sAgent;
+        this.minHeight = minHeight;
+        this.maxHeight = maxHeight;
     }
 
     public void GenerateBeach(float[,] heightMap)
@@ -34,7 +38,7 @@ public class BeachAgent
             }
 
             // --- 2. Aplanar área costera ---
-            FlattenArea(heightMap, position, 3, 0.16f, 0.22f);
+            FlattenArea(heightMap, position, 3, minHeight, maxHeight);
 
             // --- 3. Suavizar con SmoothAgent ---
             smoothAgent.RunFromPoint(heightMap, position, 5);

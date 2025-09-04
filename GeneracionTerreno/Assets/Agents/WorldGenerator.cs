@@ -4,23 +4,47 @@ using UnityEngine;
 public class WorldGenerator : MonoBehaviour
 {
     [Header("Mapa 3D")]
-    public int width = 128;
-    public int depth = 128;
-    public int tokenLimit = 12;
-    public int initialTokens = 700;
-
-    [Header("Playas")]
-    public int beachTokens = 250;
-    public int beachSmoothRadius = 5;
-
-    [Header("Montañas")]
-    public int mountainTokens = 350;
-    public float mountainHeightIncrement = 0.025f;
-    public int mountainSmoothRadius = 2;
-    public int mountainDirectionChangeInterval = 15;
-
+    public int width;
+    public int depth;
     private float[,] heightmap;
     public Terrain terrain;
+
+    [Header("Costa")]
+    public int tokenLimit;
+    public int initialTokens;
+    public float coastPerlinScale;
+    public float coastPerlinWeight;
+    public float coastCenterBiasWeight;
+
+    [Header("Suavizado")]
+    public int smoothTokens;
+    public int globalSmoothIterations;
+
+    [Header("Playas")]
+    public int beachTokens;
+    public int beachSmoothRadius;
+    public float beachMaxHeight;
+    public float beachMinHeight;
+
+    [Header("Montañas")]
+    public int mountainTokens;
+    public float mountainHeightIncrement;
+    public int mountainSmoothRadius;
+    public int mountainDirectionChangeInterval;
+    public int mountainRadius;
+
+    [Header("Colinas")]
+    public int hillsCount;
+    public int hillTokens;
+    public float hillHeightIncrement;
+    public int hillSmoothRadius;
+    public float hillMinDistance;
+    public float hillMaxDistance;
+    public int hillRPerp;
+    public int hillRAlong;
+
+
+   
 
     void Start()
     {
@@ -32,14 +56,11 @@ public class WorldGenerator : MonoBehaviour
         width = depth = resolution;
 
         // --- Generar línea de costa ---
-        CoastAgent coastGen = new CoastAgent(width, depth, tokenLimit);
+        CoastAgent coastGen = new CoastAgent(width, depth, tokenLimit,coastPerlinScale,coastPerlinWeight,coastCenterBiasWeight);
         coastGen.GenerateCoastline(heightmap, initialTokens);
 
         // --- Rellenar tierra ---
         RellenarInterior();
-
-        // --- Forzar bordes a nivel del mar ---
-        ForzarBordesMar(heightmap, 0.05f);
 
         // --- Recopilar todos los puntos de costa ---
         List<Vector2Int> coastPoints = new List<Vector2Int>();
@@ -49,11 +70,11 @@ public class WorldGenerator : MonoBehaviour
                     coastPoints.Add(new Vector2Int(x, z));
 
         // --- Generar playas desde varios puntos de la costa ---
-        SmoothAgent sAgent = new SmoothAgent(heightmap, coastPoints[0], beachTokens);
+        SmoothAgent sAgent = new SmoothAgent(heightmap, coastPoints[0], smoothTokens);
         int beachTokensPerAgent = Mathf.Max(1, beachTokens / coastPoints.Count);
         foreach (var p in coastPoints)
         {
-            BeachAgent beach = new BeachAgent(p, beachTokensPerAgent, beachSmoothRadius, sAgent);
+            BeachAgent beach = new BeachAgent(p, beachTokensPerAgent, beachSmoothRadius, sAgent, beachMinHeight, beachMaxHeight);
             beach.GenerateBeach(heightmap);
         }
 
@@ -65,15 +86,42 @@ public class WorldGenerator : MonoBehaviour
             tokens: mountainTokens,
             heightIncrement: mountainHeightIncrement,
             smoothRadius: mountainSmoothRadius,
-            directionChangeInterval: mountainDirectionChangeInterval
+            directionChangeInterval: mountainDirectionChangeInterval,
+            radius: mountainRadius
         );
 
+        // --- Generar colinas ---
+        var hill = new HillAgent(heightmap, sAgent);
+        Vector2 mountainCenter = new Vector2(mountainStart.x, mountainStart.y);
+
+        for (int i = 0; i < hillsCount; i++)
+        {
+            float angle = Random.Range(0f, Mathf.PI * 2f);
+            float distance = Random.Range(hillMinDistance, hillMaxDistance);
+            int baseX = Mathf.RoundToInt(mountainCenter.x + Mathf.Cos(angle) * distance);
+            int baseY = Mathf.RoundToInt(mountainCenter.y + Mathf.Sin(angle) * distance);
+
+            baseX = Mathf.Clamp(baseX, 0, width - 1);
+            baseY = Mathf.Clamp(baseY, 0, depth - 1);
+
+            var basePoint = new Vector2Int(baseX, baseY);
+
+            hill.GenerateHill(
+                basePoint,
+                mountainCenter,
+                tokens: hillTokens,
+                heightIncrement: hillHeightIncrement,
+                smoothRadius: hillSmoothRadius,
+                rPerp: hillRPerp,
+                rAlong: hillRAlong
+            );
+        }
+
         // --- Suavizado global más fuerte ---
-        sAgent.SuavizadoGlobal(heightmap, 1);
+        sAgent.SuavizadoGlobal(heightmap, globalSmoothIterations);
 
-        // --- Normalizar valores antes de aplicar ---
-        //NormalizarTerreno(heightmap);
-
+        // --- Forzar bordes a nivel del mar ---
+        ForzarBordesMar(heightmap, 0.05f);
         // --- Aplicar al terreno 3D ---
         AplicarAlTerrain();
     }

@@ -589,17 +589,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74033526cb2ae1448a15cfa175964f5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 150
-  depth: 150
-  tokenLimit: 3
-  initialTokens: 1000
-  beachTokens: 250
-  beachSmoothRadius: 2
-  mountainTokens: 100
-  mountainHeightIncrement: 0.015
-  mountainSmoothRadius: 3
-  mountainDirectionChangeInterval: 1
+  width: 192
+  depth: 192
   terrain: {fileID: 1486747009}
+  tokenLimit: 10
+  initialTokens: 600
+  coastPerlinScale: 0.18
+  coastPerlinWeight: 1.5
+  coastCenterBiasWeight: 1
+  smoothTokens: 80
+  globalSmoothIterations: 4
+  beachTokens: 180
+  beachSmoothRadius: 2
+  beachMaxHeight: 0.05
+  beachMinHeight: 0.13
+  mountainTokens: 120
+  mountainHeightIncrement: 0.02
+  mountainSmoothRadius: 2
+  mountainDirectionChangeInterval: 3
+  mountainRadius: 6
+  hillsCount: 18
+  hillTokens: 10
+  hillHeightIncrement: 0.01
+  hillSmoothRadius: 3
+  hillMinDistance: 25
+  hillMaxDistance: 70
+  hillRPerp: 8
+  hillRAlong: 5
 --- !u!1 &1486747007
 GameObject:
   m_ObjectHideFlags: 0

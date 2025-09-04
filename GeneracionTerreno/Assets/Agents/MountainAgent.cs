@@ -14,7 +14,7 @@ public class MountainAgent
         this.smoothAgent = sAgent;
     }
 
-    public void GenerateMountain(Vector2Int start, int tokens, float heightIncrement, int smoothRadius, int directionChangeInterval)
+    public void GenerateMountain(Vector2Int start, int tokens, float heightIncrement, int smoothRadius, int directionChangeInterval, int radius)
     {
         Vector2Int location = start;
         Vector2Int direction = RandomDirection();
@@ -22,7 +22,7 @@ public class MountainAgent
         for (int i = 0; i < tokens; i++)
         {
             // Elevar un "wedge" (zona alargada)
-            RaiseWedge(location, direction, heightIncrement);
+            RaiseWedge(location, direction, heightIncrement, radius);
 
             // Suavizar alrededor
             Smooth(location, smoothRadius);
@@ -40,9 +40,8 @@ public class MountainAgent
         }
     }
 
-    private void RaiseWedge(Vector2Int location, Vector2Int direction, float increment)
+    private void RaiseWedge(Vector2Int location, Vector2Int direction, float increment, int radius)
     {
-        int radius = 4; // grosor de la montaña
         for (int x = -radius; x <= radius; x++)
         {
             for (int y = -radius; y <= radius; y++)

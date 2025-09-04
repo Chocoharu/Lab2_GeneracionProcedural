@@ -4,12 +4,18 @@ using UnityEngine;
 public class CoastAgent
 {
     private int width, depth, tokenLimit;
+    private float perlinScale = 0.15f;
+    private float perlinWeight = 1.2f;
+    private float centerBiasWeight = 1.0f;
 
-    public CoastAgent(int width, int depth, int tokenLimit)
+    public CoastAgent(int width, int depth, int tokenLimit, float perlinScale, float perlinWeight, float centerBiasWeight)
     {
         this.width = width;
         this.depth = depth;
         this.tokenLimit = tokenLimit;
+        this.perlinScale = perlinScale;
+        this.perlinWeight = perlinWeight;
+        this.centerBiasWeight = centerBiasWeight;
     }
 
     public void GenerateCoastline(float[,] heightmap, int initialTokens)
@@ -78,15 +84,14 @@ public class CoastAgent
         Vector2 d = ((Vector2)agent.direction).normalized;
         score += Vector2.Dot(v, d) * 0.5f;
 
-        // Más peso al ruido Perlin
-        score += Mathf.PerlinNoise(cell.x * 0.15f, cell.y * 0.15f) * 1.2f;
+        // Usa los parámetros configurables
+        score += Mathf.PerlinNoise(cell.x * perlinScale, cell.y * perlinScale) * perlinWeight;
 
-        // Sesgo radial hacia el centro
         float cx = width / 2f;
         float cy = depth / 2f;
         float distToCenter = Vector2.Distance(new Vector2(cell.x, cell.y), new Vector2(cx, cy));
         float maxDist = Mathf.Min(width, depth) * 0.5f;
-        score += (1f - (distToCenter / maxDist)) * 1.0f; // favorece puntos más centrales
+        score += (1f - (distToCenter / maxDist)) * centerBiasWeight;
 
         return score;
     }

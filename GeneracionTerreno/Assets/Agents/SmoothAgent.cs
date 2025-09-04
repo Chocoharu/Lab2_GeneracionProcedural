@@ -107,6 +107,19 @@ public class SmoothAgent
         }
         return sum / count;
     }
+    public float AverageNeighborhoodPublic(float[,] map, int cx, int cy, int radius)
+    {
+        float sum = 0f; int count = 0;
+        int w = map.GetLength(0), h = map.GetLength(1);
+        for (int x = -radius; x <= radius; x++)
+            for (int y = -radius; y <= radius; y++)
+            {
+                int nx = cx + x, ny = cy + y;
+                if (nx >= 0 && nx < w && ny >= 0 && ny < h)
+                { sum += map[nx, ny]; count++; }
+            }
+        return sum / Mathf.Max(1, count);
+    }
     public void SuavizadoGlobal(float[,] map, int repeticiones)
     {
         int w = map.GetLength(0);
