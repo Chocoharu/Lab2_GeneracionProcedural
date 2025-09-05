@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Data;
 using UnityEngine;
+using UnityEngine.Splines; 
 
 public class LSystem : MonoBehaviour
 {
@@ -13,7 +14,7 @@ public class LSystem : MonoBehaviour
     public List<Rule> rules = new List<Rule>();
 
     private string currentString;
-
+    [SerializeField]private SplineContainer container;
     // Las reglas para el sistema L se definen como objetos de la clase Rule y se agregan a la lista 'rules'.
     // Ejemplo de definición de reglas en el Inspector de Unity o mediante código:
 
@@ -56,37 +57,75 @@ public class LSystem : MonoBehaviour
 
     void Draw(string sequence)
     {
-        Stack<(Vector3 pos, Quaternion rot)> transformStack = new Stack<(Vector3, Quaternion)>();
+        Stack<(Vector3 pos, Vector3 H, Vector3 L, Vector3 U, Spline spline)> transformStack =
+        new Stack<(Vector3, Vector3, Vector3, Vector3, Spline)>();
+
+        // Estado inicial: tortuga en convención estándar
         Vector3 position = Vector3.zero;
-        Quaternion rotation = Quaternion.identity;
+        Vector3 H = Vector3.up;  // Y+
+        Vector3 L = Vector3.left;   // Left -> X-
+        Vector3 U = Vector3.forward;  // Up -> Z
+
+        Spline spline = new Spline();
+        container.AddSpline(spline);
+        spline.Add(new BezierKnot(position));
 
         foreach (char c in sequence)
         {
-
-            switch(c)
+            switch (c)
             {
                 case 'F':
-                    Vector3 newPos = position + rotation * Vector3.up * length;
-                    Debug.DrawLine(position, newPos, Color.green, 100f);
+                    Vector3 newPos = position + H * length;
+                    Debug.Log($"Posición: {position}");
+                    Debug.DrawRay(position, H * length, Color.red, 10f);
+                    spline.Add(new BezierKnot(newPos));
                     position = newPos;
                     break;
-                case '+':
-                    rotation *= Quaternion.Euler(0, 0, angle);
+
+                case '+': // yaw +
+                    Rotate(ref H, ref L, ref U, U, angle + Random.Range(-5f, 5f));
                     break;
-                case '-':
-                    rotation *= Quaternion.Euler(0, 0, -angle);
+                case '-': // yaw -
+                    Rotate(ref H, ref L, ref U, U, -angle + Random.Range(-5f, 5f));
                     break;
+                case '&': // pitch +
+                    Rotate(ref H, ref L, ref U, L, angle + Random.Range(-5f, 5f));
+                    break;
+                case '^': // pitch -
+                    Rotate(ref H, ref L, ref U, L, -angle + Random.Range(-5f, 5f));
+                    break;
+                case '\\': // roll +
+                    Rotate(ref H, ref L, ref U, H, angle + Random.Range(-5f, 5f));
+                    break;
+                case '/': // roll -
+                    Rotate(ref H, ref L, ref U, H, -angle + Random.Range(-5f, 5f));
+                    break;
+
                 case '[':
-                    transformStack.Push((position, rotation));
+                    transformStack.Push((position, H, L, U, spline));
+                    spline = new Spline();
+                    container.AddSpline(spline);
+                    spline.Add(new BezierKnot(position));
                     break;
+
                 case ']':
-                     (position, rotation) = transformStack.Pop();
+                    (position, H, L, U, spline) = transformStack.Pop();
                     break;
+
                 case 'X':
-                    // 'X' no dibuja nada, solo es una variable para las reglas
+                    // no dibuja
                     break;
             }
         }
+    }
+
+    // Función de rotación: rota H,L,U alrededor de un eje
+    void Rotate(ref Vector3 H, ref Vector3 L, ref Vector3 U, Vector3 axis, float angle)
+    {
+        Quaternion q = Quaternion.AngleAxis(angle, axis);
+        H = q * H;
+        L = q * L;
+        U = q * U;
     }
 }
 
