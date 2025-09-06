@@ -686,13 +686,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axiom: X
   iterations: 2
-  angle: 22.5
-  length: 3
+  angle: 25
+  length: 2
   rules:
   - symbol: 88
-    replacement: F[+X][-X][&X][^X][\\X][/X]FX
+    replacement: F[+X][-X][/X][\X]FX
   - symbol: 70
-    replacement: FF
+    replacement: 'F[+F][-F]'
   container: {fileID: 987235747}
 --- !u!4 &987235746
 Transform:

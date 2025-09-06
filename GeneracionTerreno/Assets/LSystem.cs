@@ -57,75 +57,88 @@ public class LSystem : MonoBehaviour
 
     void Draw(string sequence)
     {
-        Stack<(Vector3 pos, Vector3 H, Vector3 L, Vector3 U, Spline spline)> transformStack =
-        new Stack<(Vector3, Vector3, Vector3, Vector3, Spline)>();
+        Stack<(Vector3 pos, Quaternion rotation, Spline spline)> transformStack =
+        new Stack<(Vector3, Quaternion, Spline)>();
 
-        // Estado inicial: tortuga en convención estándar
         Vector3 position = Vector3.zero;
-        Vector3 H = Vector3.up;  // Y+
-        Vector3 L = Vector3.left;   // Left -> X-
-        Vector3 U = Vector3.forward;  // Up -> Z
+        Quaternion rotation = Quaternion.identity;
+        Vector3 forward = Vector3.up; // Crecimiento vertical inicial
 
-        Spline spline = new Spline();
-        container.AddSpline(spline);
-        spline.Add(new BezierKnot(position));
+        Spline currentSpline = new Spline();
+        container.AddSpline(currentSpline);
+
+
+        BezierKnot startKnot = new BezierKnot(position);
+        startKnot.Rotation = Quaternion.LookRotation(forward, Vector3.right);
+        currentSpline.Add(startKnot);
 
         foreach (char c in sequence)
         {
             switch (c)
             {
                 case 'F':
-                    Vector3 newPos = position + H * length;
-                    Debug.Log($"Posición: {position}");
-                    Debug.DrawRay(position, H * length, Color.red, 10f);
-                    spline.Add(new BezierKnot(newPos));
+                    // Calcular dirección actual
+                    Vector3 dir = rotation * forward;
+
+                    // Avanzar en la dirección
+                    Vector3 newPos = position + dir * length;
+
+                    // Crear nodo con orientación para evitar que quede plano
+                    BezierKnot knot = new BezierKnot(newPos);
+
+                    // Calcular un "up" estable para el spline
+                    Vector3 normal = Vector3.Cross(dir, Vector3.right);
+                    if (normal.sqrMagnitude < 0.001f) // si era paralelo al eje X
+                        normal = Vector3.Cross(dir, Vector3.forward);
+
+                    knot.Rotation = Quaternion.LookRotation(dir, normal);
+
+                    currentSpline.Add(knot);
+
                     position = newPos;
                     break;
 
-                case '+': // yaw +
-                    Rotate(ref H, ref L, ref U, U, angle + Random.Range(-5f, 5f));
+                case '+': // Yaw positivo (rotación alrededor de Z)
+                    rotation *= Quaternion.AngleAxis(angle, rotation * Vector3.forward);
                     break;
-                case '-': // yaw -
-                    Rotate(ref H, ref L, ref U, U, -angle + Random.Range(-5f, 5f));
+                case '-': // Yaw negativo
+                    rotation *= Quaternion.AngleAxis(-angle, rotation * Vector3.forward);
                     break;
-                case '&': // pitch +
-                    Rotate(ref H, ref L, ref U, L, angle + Random.Range(-5f, 5f));
+                case '&': // Pitch positivo (rotación alrededor de X)
+                    rotation *= Quaternion.AngleAxis(angle, rotation * Vector3.right);
                     break;
-                case '^': // pitch -
-                    Rotate(ref H, ref L, ref U, L, -angle + Random.Range(-5f, 5f));
+                case '^': // Pitch negativo
+                    rotation *= Quaternion.AngleAxis(-angle, rotation * Vector3.right);
                     break;
-                case '\\': // roll +
-                    Rotate(ref H, ref L, ref U, H, angle + Random.Range(-5f, 5f));
+                case '\\': // Roll positivo (rotación alrededor de Y)
+                    rotation *= Quaternion.AngleAxis(angle, rotation * Vector3.up);
                     break;
-                case '/': // roll -
-                    Rotate(ref H, ref L, ref U, H, -angle + Random.Range(-5f, 5f));
+                case '/': // Roll negativo
+                    rotation *= Quaternion.AngleAxis(-angle, rotation * Vector3.up);
                     break;
 
                 case '[':
-                    transformStack.Push((position, H, L, U, spline));
-                    spline = new Spline();
-                    container.AddSpline(spline);
-                    spline.Add(new BezierKnot(position));
+                    transformStack.Push((position, rotation, currentSpline));
+                    currentSpline = new Spline();
+                    container.AddSpline(currentSpline);
+                    currentSpline.Add(new BezierKnot(position));
                     break;
 
                 case ']':
-                    (position, H, L, U, spline) = transformStack.Pop();
+                    if (transformStack.Count > 0)
+                    {
+                        var previousState = transformStack.Pop();
+                        position = previousState.pos;
+                        rotation = previousState.rotation;
+                        currentSpline = previousState.spline;
+                    }
                     break;
 
                 case 'X':
-                    // no dibuja
                     break;
             }
         }
     }
-
-    // Función de rotación: rota H,L,U alrededor de un eje
-    void Rotate(ref Vector3 H, ref Vector3 L, ref Vector3 U, Vector3 axis, float angle)
-    {
-        Quaternion q = Quaternion.AngleAxis(angle, axis);
-        H = q * H;
-        L = q * L;
-        U = q * U;
-    }
 }
+
 
