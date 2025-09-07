@@ -589,33 +589,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74033526cb2ae1448a15cfa175964f5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 192
-  depth: 192
+  width: 514
+  depth: 514
   terrain: {fileID: 1486747009}
-  tokenLimit: 10
-  initialTokens: 600
-  coastPerlinScale: 0.18
-  coastPerlinWeight: 1.5
-  coastCenterBiasWeight: 1
-  smoothTokens: 80
-  globalSmoothIterations: 4
-  beachTokens: 180
-  beachSmoothRadius: 2
+  tokenLimit: 4
+  initialTokens: 1500
+  coastPerlinScale: 0.14
+  coastPerlinWeight: 0.7
+  coastCenterBiasWeight: 1.2
+  smoothTokens: 208
+  globalSmoothIterations: 5
+  beachTokens: 500
+  beachSmoothRadius: 3
   beachMaxHeight: 0.05
-  beachMinHeight: 0.13
-  mountainTokens: 120
-  mountainHeightIncrement: 0.02
-  mountainSmoothRadius: 2
-  mountainDirectionChangeInterval: 3
-  mountainRadius: 6
-  hillsCount: 18
-  hillTokens: 10
-  hillHeightIncrement: 0.01
-  hillSmoothRadius: 3
-  hillMinDistance: 25
-  hillMaxDistance: 70
-  hillRPerp: 8
-  hillRAlong: 5
+  beachMinHeight: 0.18
+  mountainTokens: 150
+  mountainHeightIncrement: 0.015
+  mountainSmoothRadius: 10
+  mountainDirectionChangeInterval: 1
+  mountainRadius: 10
+  hillsCount: 30
+  hillTokens: 30
+  hillHeightIncrement: 0.008
+  hillSmoothRadius: 15
+  hillMinDistance: 80
+  hillMaxDistance: 300
+  hillRPerp: 21
+  hillRAlong: 13
+  minDist: 10
+  maxDist: 20
+  riverDepthFactor: 0.015
+  riverSmoothRadius: 1
+  waterPlanePrefab: {fileID: 1507636620937791836, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
 --- !u!1 &1486747007
 GameObject:
   m_ObjectHideFlags: 0
@@ -681,7 +686,7 @@ Terrain:
   m_StaticShadowCaster: 0
   m_IgnoreQualitySettings: 0
   m_ReflectionProbeUsage: 1
-  m_MaterialTemplate: {fileID: 2100000, guid: 594ea882c5a793440b60ff72d896021e, type: 2}
+  m_MaterialTemplate: {fileID: 2100000, guid: 030a435f15f4bce47a2acc7d6dbf4e2a, type: 2}
   m_BakeLightProbesForTrees: 1
   m_PreserveTreePrototypeLayers: 0
   m_DeringLightProbesForTrees: 1
@@ -709,6 +714,75 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &2004810828
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 11.0295315
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.0636
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 10.986987
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 258
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 18.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 257
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791777, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507636620937791836, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
+      propertyPath: m_Name
+      value: WaterBlock_50m
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -720,3 +794,4 @@ SceneRoots:
   - {fileID: 1119039868}
   - {fileID: 1486747010}
   - {fileID: 987235746}
+  - {fileID: 2004810828}

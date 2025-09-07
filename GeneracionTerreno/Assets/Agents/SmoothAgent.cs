@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Clase para suavizar mapas de altura mediante diferentes métodos
 public class SmoothAgent
 {
     private float[,] heightMap;
@@ -7,6 +8,7 @@ public class SmoothAgent
     private int tokens;
     private Vector2Int start;
 
+    // Constructor: inicializa el agente con el mapa, punto de inicio y cantidad de tokens
     public SmoothAgent(float[,] heightMap, Vector2Int start, int tokens)
     {
         this.heightMap = heightMap;
@@ -15,6 +17,7 @@ public class SmoothAgent
         this.tokens = tokens;
     }
 
+    // Ejecuta el suavizado desde un punto específico usando tokens
     public void RunFromPoint(float[,] heightMap, Vector2Int start, int tokens)
     {
         Vector2Int location = start;
@@ -28,6 +31,7 @@ public class SmoothAgent
         }
     }
 
+    // Calcula el promedio ponderado de la vecindad de una celda
     private float GetWeightedAverage(Vector2Int loc, float[,] map)
     {
         float sum = 0f;
@@ -52,6 +56,7 @@ public class SmoothAgent
         return sum / weightSum;
     }
 
+    // Devuelve una celda vecina aleatoria válida
     private Vector2Int GetRandomNeighbor(Vector2Int loc, int size)
     {
         int[,] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
@@ -63,6 +68,7 @@ public class SmoothAgent
         return new Vector2Int(nx, ny);
     }
 
+    // Suaviza un área circular alrededor de una ubicación dada
     public void SmoothArea(float[,] heightmap, Vector2Int location, int radius)
     {
         int width = heightmap.GetLength(0);
@@ -84,6 +90,7 @@ public class SmoothAgent
         }
     }
 
+    // Calcula el promedio de la vecindad de una celda con radio dado
     private float AverageNeighborhood(float[,] heightmap, int cx, int cy, int radius)
     {
         float sum = 0f;
@@ -107,6 +114,8 @@ public class SmoothAgent
         }
         return sum / count;
     }
+
+    // Versión pública del promedio de vecindad
     public float AverageNeighborhoodPublic(float[,] map, int cx, int cy, int radius)
     {
         float sum = 0f; int count = 0;
@@ -120,6 +129,8 @@ public class SmoothAgent
             }
         return sum / Mathf.Max(1, count);
     }
+
+    // Suavizado global del mapa por varias repeticiones
     public void SuavizadoGlobal(float[,] map, int repeticiones)
     {
         int w = map.GetLength(0);

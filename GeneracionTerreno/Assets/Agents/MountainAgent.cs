@@ -6,6 +6,7 @@ public class MountainAgent
     private int width, depth;
     private SmoothAgent smoothAgent;
 
+    // Inicializa el agente de montaña con el mapa de alturas y el agente de suavizado
     public MountainAgent(float[,] heightmap, SmoothAgent sAgent)
     {
         this.heightmap = heightmap;
@@ -14,6 +15,7 @@ public class MountainAgent
         this.smoothAgent = sAgent;
     }
 
+    // Genera una montaña a partir de un punto inicial, modificando el mapa de alturas
     public void GenerateMountain(Vector2Int start, int tokens, float heightIncrement, int smoothRadius, int directionChangeInterval, int radius)
     {
         Vector2Int location = start;
@@ -21,25 +23,21 @@ public class MountainAgent
 
         for (int i = 0; i < tokens; i++)
         {
-            // Elevar un "wedge" (zona alargada)
-            RaiseWedge(location, direction, heightIncrement, radius);
+            RaiseWedge(location, direction, heightIncrement, radius); // Eleva una zona en forma de "cuña"
+            Smooth(location, smoothRadius); // Suaviza la zona elevada
+            location += direction; // Avanza en la dirección actual
 
-            // Suavizar alrededor
-            Smooth(location, smoothRadius);
-
-            // Avanzar
-            location += direction;
-
-            // Cambiar dirección cada cierto número de tokens
+            // Cambia la dirección cada cierto número de pasos
             if (i % directionChangeInterval == 0)
             {
-                float angle = Random.Range(-45f, 45f); // Rango más natural
+                float angle = Random.Range(-45f, 45f);
                 direction = RotateDirection(direction, angle);
                 if (direction == Vector2Int.zero) direction = RandomDirection();
             }
         }
     }
 
+    // Eleva una zona circular alrededor de la ubicación dada
     private void RaiseWedge(Vector2Int location, Vector2Int direction, float increment, int radius)
     {
         for (int x = -radius; x <= radius; x++)
@@ -57,11 +55,13 @@ public class MountainAgent
         }
     }
 
+    // Aplica suavizado en el área alrededor de la ubicación dada
     private void Smooth(Vector2Int location, int radius)
     {
         smoothAgent.SmoothArea(heightmap, location, radius);
     }
 
+    // Devuelve una dirección aleatoria cardinal
     private Vector2Int RandomDirection()
     {
         Vector2Int[] dirs = {
@@ -71,6 +71,7 @@ public class MountainAgent
         return dirs[UnityEngine.Random.Range(0, dirs.Length)];
     }
 
+    // Rota la dirección actual por un ángulo dado en grados
     private Vector2Int RotateDirection(Vector2Int dir, float degrees)
     {
         float rad = degrees * Mathf.Deg2Rad;

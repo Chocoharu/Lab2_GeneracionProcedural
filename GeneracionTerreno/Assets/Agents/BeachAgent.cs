@@ -1,13 +1,14 @@
 using UnityEngine;
 
+// Representa un agente que genera y suaviza zonas de playa en un mapa de alturas.
 public class BeachAgent
 {
     public Vector2Int position;   // Posición actual en el mapa
-    public int tokens;            // Energía (pasos que puede dar)
-    public int walkLength;        // Cuánto avanza tierra adentro
-    private SmoothAgent smoothAgent; // Agente de suavizado
-    private float minHeight;
-    private float maxHeight;
+    public int tokens;            // Energía restante para avanzar
+    public int walkLength;        // Pasos tierra adentro por iteración
+    private SmoothAgent smoothAgent; // Referencia al agente de suavizado
+    private float minHeight;      // Altura mínima de la playa
+    private float maxHeight;      // Altura máxima de la playa
 
     public BeachAgent(Vector2Int startPos, int tokenCount, int walk, SmoothAgent sAgent, float minHeight, float maxHeight)
     {
@@ -19,6 +20,7 @@ public class BeachAgent
         this.maxHeight = maxHeight;
     }
 
+    // Modifica el mapa de alturas para crear una zona de playa y suavizarla.
     public void GenerateBeach(float[,] heightMap)
     {
         int sizeX = heightMap.GetLength(0);
@@ -28,7 +30,7 @@ public class BeachAgent
         {
             tokens--;
 
-            // --- 1. Reubicar si estamos demasiado cerca del agua ---
+            // Si la posición actual está cerca del agua, reubica el agente.
             if (heightMap[position.x, position.y] < 0.35f)
             {
                 position = new Vector2Int(
@@ -37,24 +39,24 @@ public class BeachAgent
                 );
             }
 
-            // --- 2. Aplanar área costera ---
+            // Aplana la zona costera en la posición actual.
             FlattenArea(heightMap, position, 3, minHeight, maxHeight);
 
-            // --- 3. Suavizar con SmoothAgent ---
+            // Suaviza la zona costera usando SmoothAgent.
             smoothAgent.RunFromPoint(heightMap, position, 5);
 
-            // --- 4. Mover tierra adentro ---
+            // Calcula una nueva posición tierra adentro.
             Vector2Int inland = position + new Vector2Int(Random.Range(-1, 2), Random.Range(1, 3));
             inland.x = Mathf.Clamp(inland.x, 0, sizeX - 1);
             inland.y = Mathf.Clamp(inland.y, 0, sizeY - 1);
 
-            // --- 5. Paseo hacia adentro ---
+            // Realiza el paseo tierra adentro, modificando y suavizando el terreno.
             for (int i = 0; i < walkLength; i++)
             {
                 FlattenArea(heightMap, inland, 2, 0.18f, 0.25f);
                 smoothAgent.RunFromPoint(heightMap, inland, 3);
 
-                // Paso aleatorio
+                // Movimiento aleatorio en cada paso.
                 inland += new Vector2Int(Random.Range(-1, 2), Random.Range(-1, 2));
                 inland.x = Mathf.Clamp(inland.x, 0, sizeX - 1);
                 inland.y = Mathf.Clamp(inland.y, 0, sizeY - 1);
@@ -62,7 +64,7 @@ public class BeachAgent
         }
     }
 
-    // --- Aplanar zona ---
+    // Aplana el área alrededor de un punto, interpolando entre minHeight y maxHeight según la distancia al centro.
     private void FlattenArea(float[,] map, Vector2Int center, int radius, float minHeight, float maxHeight)
     {
         for (int x = -radius; x <= radius; x++)
@@ -72,7 +74,7 @@ public class BeachAgent
                 int nx = Mathf.Clamp(center.x + x, 0, map.GetLength(0) - 1);
                 int ny = Mathf.Clamp(center.y + y, 0, map.GetLength(1) - 1);
 
-                float dist = Mathf.Sqrt(x * x + y * y) / radius; // 0 en centro, 1 en borde
+                float dist = Mathf.Sqrt(x * x + y * y) / radius; // Proporción de distancia al centro
                 float targetHeight = Mathf.Lerp(maxHeight, minHeight, dist);
 
                 map[nx, ny] = Mathf.Lerp(map[nx, ny], targetHeight, 0.7f);

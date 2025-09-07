@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class CoastAgent
 {
+    // Dimensiones y parámetros de generación
     private int width, depth, tokenLimit;
     private float perlinScale = 0.15f;
     private float perlinWeight = 1.2f;
@@ -18,6 +19,7 @@ public class CoastAgent
         this.centerBiasWeight = centerBiasWeight;
     }
 
+    // Inicia la generación de la línea costera
     public void GenerateCoastline(float[,] heightmap, int initialTokens)
     {
         Vector2Int start = RandomBorderPoint();
@@ -26,6 +28,7 @@ public class CoastAgent
         CoastlineGenerate(root, heightmap);
     }
 
+    // Recursivamente divide el agente o pinta localmente
     private void CoastlineGenerate(CoastAgentInstance agent, float[,] heightmap)
     {
         if (agent.tokens <= tokenLimit)
@@ -41,6 +44,7 @@ public class CoastAgent
         CoastlineGenerate(childB, heightmap);
     }
 
+    // Pinta la línea costera localmente según la puntuación de celdas adyacentes
     private void RunLocalPaint(CoastAgentInstance agent, float[,] heightmap)
     {
         for (int t = 0; t < agent.tokens; t++)
@@ -65,6 +69,7 @@ public class CoastAgent
         }
     }
 
+    // Crea un agente hijo con la mitad de los tokens
     private CoastAgentInstance CreateChild(CoastAgentInstance parent)
     {
         Vector2Int seed = RandomBorderPoint();
@@ -74,6 +79,7 @@ public class CoastAgent
         return new CoastAgentInstance(seed, tok, dir);
     }
 
+    // Calcula la puntuación de una celda para decidir el avance del agente
     private float EvaluateScore(Vector2Int cell, CoastAgentInstance agent, float[,] heightmap)
     {
         float score = 0f;
@@ -84,7 +90,7 @@ public class CoastAgent
         Vector2 d = ((Vector2)agent.direction).normalized;
         score += Vector2.Dot(v, d) * 0.5f;
 
-        // Usa los parámetros configurables
+        // Parámetros configurables para ruido y sesgo al centro
         score += Mathf.PerlinNoise(cell.x * perlinScale, cell.y * perlinScale) * perlinWeight;
 
         float cx = width / 2f;
@@ -96,11 +102,13 @@ public class CoastAgent
         return score;
     }
 
+    // Verifica si la celda está dentro de los límites
     private bool IsInside(Vector2Int p)
     {
         return p.x >= 0 && p.x < width && p.y >= 0 && p.y < depth;
     }
 
+    // Devuelve un punto aleatorio en el borde del mapa
     private Vector2Int RandomBorderPoint()
     {
         int side = Random.Range(0, 4);
@@ -110,6 +118,7 @@ public class CoastAgent
         return new Vector2Int(width - 1, Random.Range(0, depth));
     }
 
+    // Devuelve una dirección cardinal aleatoria
     private Vector2Int RandomDirection()
     {
         Vector2Int[] dirs = {
@@ -119,6 +128,7 @@ public class CoastAgent
         return dirs[Random.Range(0, dirs.Length)];
     }
 
+    // Devuelve las celdas adyacentes (incluyendo diagonales)
     private List<Vector2Int> GetAdjacent(Vector2Int p)
     {
         return new List<Vector2Int>

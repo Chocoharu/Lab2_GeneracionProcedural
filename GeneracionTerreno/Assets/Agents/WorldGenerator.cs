@@ -43,33 +43,37 @@ public class WorldGenerator : MonoBehaviour
     public int hillRPerp;
     public int hillRAlong;
 
-
-   
+    [Header("Río")]
+    public float minDist;
+    public float maxDist;
+    public float riverDepthFactor;
+    public int riverSmoothRadius;
+    public GameObject waterPlanePrefab;
 
     void Start()
     {
         int resolution = Mathf.ClosestPowerOfTwo(Mathf.Max(width, depth) - 1) + 1;
         resolution += 1;
 
-        // --- Inicializar mapa ---
+        // Inicializa el mapa de alturas
         heightmap = new float[resolution, resolution];
         width = depth = resolution;
 
-        // --- Generar línea de costa ---
-        CoastAgent coastGen = new CoastAgent(width, depth, tokenLimit,coastPerlinScale,coastPerlinWeight,coastCenterBiasWeight);
+        // Genera la línea de costa
+        CoastAgent coastGen = new CoastAgent(width, depth, tokenLimit, coastPerlinScale, coastPerlinWeight, coastCenterBiasWeight);
         coastGen.GenerateCoastline(heightmap, initialTokens);
 
-        // --- Rellenar tierra ---
+        // Rellena el interior del mapa con tierra
         RellenarInterior();
 
-        // --- Recopilar todos los puntos de costa ---
+        // Obtiene los puntos de costa
         List<Vector2Int> coastPoints = new List<Vector2Int>();
         for (int x = 0; x < width; x++)
             for (int z = 0; z < depth; z++)
                 if (heightmap[x, z] <= 0.12f)
                     coastPoints.Add(new Vector2Int(x, z));
 
-        // --- Generar playas desde varios puntos de la costa ---
+        // Genera playas en los puntos de costa
         SmoothAgent sAgent = new SmoothAgent(heightmap, coastPoints[0], smoothTokens);
         int beachTokensPerAgent = Mathf.Max(1, beachTokens / coastPoints.Count);
         foreach (var p in coastPoints)
@@ -78,9 +82,12 @@ public class WorldGenerator : MonoBehaviour
             beach.GenerateBeach(heightmap);
         }
 
-        // --- Generar montañas ---
+        // Genera una montaña en una posición aleatoria
         MountainAgent mountain = new MountainAgent(heightmap, sAgent);
-        Vector2Int mountainStart = new Vector2Int(width / 3, depth / 3);
+        Vector2Int mountainStart = new Vector2Int(
+            Random.Range(width / 6, 5 * width / 6),
+            Random.Range(depth / 6, 5 * depth / 6)
+        );
         mountain.GenerateMountain(
             mountainStart,
             tokens: mountainTokens,
@@ -90,7 +97,7 @@ public class WorldGenerator : MonoBehaviour
             radius: mountainRadius
         );
 
-        // --- Generar colinas ---
+        // Genera colinas alrededor de la montaña
         var hill = new HillAgent(heightmap, sAgent);
         Vector2 mountainCenter = new Vector2(mountainStart.x, mountainStart.y);
 
@@ -98,11 +105,13 @@ public class WorldGenerator : MonoBehaviour
         {
             float angle = Random.Range(0f, Mathf.PI * 2f);
             float distance = Random.Range(hillMinDistance, hillMaxDistance);
+            int margin = width / 10;
+
             int baseX = Mathf.RoundToInt(mountainCenter.x + Mathf.Cos(angle) * distance);
             int baseY = Mathf.RoundToInt(mountainCenter.y + Mathf.Sin(angle) * distance);
 
-            baseX = Mathf.Clamp(baseX, 0, width - 1);
-            baseY = Mathf.Clamp(baseY, 0, depth - 1);
+            baseX = Mathf.Clamp(baseX, margin, width - margin - 1);
+            baseY = Mathf.Clamp(baseY, margin, depth - margin - 1);
 
             var basePoint = new Vector2Int(baseX, baseY);
 
@@ -117,13 +126,35 @@ public class WorldGenerator : MonoBehaviour
             );
         }
 
-        // --- Suavizado global más fuerte ---
+        // Busca un punto de costa cercano a la montaña para el río
+        List<Vector2Int> coastNearMountain = new List<Vector2Int>();
+        foreach (var p in coastPoints)
+        {
+            float dist = Vector2Int.Distance(p, mountainStart);
+            if (dist >= minDist && dist <= maxDist)
+                coastNearMountain.Add(p);
+        }
+        Vector2Int riverCoastPoint;
+        if (coastNearMountain.Count > 0)
+            riverCoastPoint = coastNearMountain[Random.Range(0, coastNearMountain.Count)];
+        else
+            riverCoastPoint = coastPoints[Random.Range(0, coastPoints.Count)];
+
+        // Genera el río desde la montaña hasta la costa
+        RiverAgent river = new RiverAgent(heightmap, sAgent);
+        river.GenerateRiver(riverCoastPoint, mountainStart, riverDepthFactor, riverSmoothRadius);
+
+        // Suaviza el terreno globalmente
         sAgent.SuavizadoGlobal(heightmap, globalSmoothIterations);
 
-        // --- Forzar bordes a nivel del mar ---
-        ForzarBordesMar(heightmap, 0.05f);
-        // --- Aplicar al terreno 3D ---
+        // Ajusta los bordes al nivel del mar
+        //ForzarBordesMar(heightmap, 0.05f);
+
+        // Aplica el mapa de alturas al Terrain de Unity
         AplicarAlTerrain();
+
+        // Pinta las texturas del terreno según la altura
+        PintarTerreno();
     }
 
     void RellenarInterior()
@@ -133,23 +164,22 @@ public class WorldGenerator : MonoBehaviour
             for (int z = 0; z < depth; z++)
             {
                 if (heightmap[x, z] == 0f)
-                    heightmap[x, z] = 0.2f; // altura media para tierra
+                    heightmap[x, z] = 0.2f;
             }
         }
     }
+
     void AplicarAlTerrain()
     {
         if (terrain == null)
         {
-            Debug.LogError("⚠️ No se asignó un Terrain en el inspector.");
+            Debug.LogError("No se asignó un Terrain en el inspector.");
             return;
         }
 
-        // Asegura que el heightmap y la resolución coincidan
         int resolution = Mathf.ClosestPowerOfTwo(Mathf.Max(width, depth)) + 1;
         terrain.terrainData.heightmapResolution = resolution;
 
-        // Si el heightmap no es cuadrado, ajusta el array
         float[,] heights = new float[resolution, resolution];
         for (int x = 0; x < resolution; x++)
         {
@@ -164,18 +194,73 @@ public class WorldGenerator : MonoBehaviour
         terrain.terrainData.size = new Vector3(width, 100, depth);
         terrain.terrainData.SetHeights(0, 0, heights);
     }
+
+    void PintarTerreno()
+    {
+        if (terrain == null)
+        {
+            Debug.LogError("No se asignó un Terrain en el inspector.");
+            return;
+        }
+
+        TerrainData data = terrain.terrainData;
+        int mapWidth = data.alphamapWidth;
+        int mapHeight = data.alphamapHeight;
+        int numTextures = data.terrainLayers.Length;
+
+        if (numTextures < 3)
+        {
+            Debug.LogWarning("Se requieren al menos 3 Terrain Layers en el Terrain.");
+            return;
+        }
+
+        float[,,] splatmapData = new float[mapWidth, mapHeight, numTextures];
+
+        for (int y = 0; y < mapHeight; y++)
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                float normX = x / (float)(mapWidth - 1);
+                float normY = y / (float)(mapHeight - 1);
+
+                float height = data.GetInterpolatedHeight(normX, normY) / data.size.y;
+
+                float[] weights = new float[numTextures];
+
+                // Asigna la textura según la altura
+                if (height < 0.15f)
+                    weights[4] = 1f;
+                else if (height < 0.19f)
+                    weights[0] = 1f;
+                else if (height < 0.22f)
+                    weights[1] = 1f;
+                else if (height < 0.35f)
+                    weights[2] = 1f;
+                else
+                    weights[3] = 1f;
+
+                float total = 0;
+                for (int i = 0; i < numTextures; i++) total += weights[i];
+                for (int i = 0; i < numTextures; i++) weights[i] /= total;
+
+                for (int i = 0; i < numTextures; i++)
+                    splatmapData[y, x, i] = weights[i];
+            }
+        }
+
+        data.SetAlphamaps(0, 0, splatmapData);
+    }
+
     void ForzarBordesMar(float[,] map, float mar = 0.0f)
     {
         int w = map.GetLength(0);
         int h = map.GetLength(1);
 
-        // Bordes horizontales
         for (int x = 0; x < w; x++)
         {
             map[x, 0] = mar;
             map[x, h - 1] = mar;
         }
-        // Bordes verticales
         for (int y = 0; y < h; y++)
         {
             map[0, y] = mar;
