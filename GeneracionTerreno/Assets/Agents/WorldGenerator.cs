@@ -55,9 +55,57 @@ public class WorldGenerator : MonoBehaviour
     public int caSteps;
     public float caFillProbability;
 
+    [Header("Bracketed L-System")]
+    public GameObject treePrefab; // Prefab que tenga LSystem_Animado
+    public int treeCount = 10;
+    public float treeSpacing = 2f;
+    public List<LSystem_Animado.Rule> defaultRules;
+    public float minTreeHeight = 0.2f; // Altura mínima para colocar árbol (evita agua)
+
+
     void Start()
     {
         CreateWorld();
+    }
+
+    void CreateTree()
+    {
+
+        if (treePrefab == null)
+        {
+            Debug.LogWarning("No se asignó treePrefab.");
+            return;
+        }
+
+        int tries = 0;
+        int placed = 0;
+        while (placed < treeCount && tries < treeCount * 5)
+        {
+            int x = Random.Range(0, width);
+            int z = Random.Range(0, depth);
+            float h = heightmap[x, z];
+
+            if (h < minTreeHeight)
+            {
+                tries++;
+                continue; // evita agua
+            }
+
+            Vector3 pos = new Vector3(x, h * terrain.terrainData.size.y, z);
+
+            GameObject treeObj = Instantiate(treePrefab, pos, Quaternion.identity, this.transform);
+            LSystem_Animado ls = treeObj.GetComponent<LSystem_Animado>();
+
+            if (ls != null)
+            {
+                ls.length = Random.Range(0.3f, 1.0f); // tamaño aleatorio
+                ls.iterations = Random.Range(2, 3);   // iteraciones aleatorias
+                ls.rules = new List<LSystem_Animado.Rule>(defaultRules); // asigna reglas
+            }
+
+            placed++;
+            tries++;
+        }
     }
 
     void RellenarInterior()
@@ -384,6 +432,8 @@ public class WorldGenerator : MonoBehaviour
 
         // Aplica el mapa de alturas al Terrain de Unity
         AplicarAlTerrain();
+
+        CreateTree();
     }
     
     /*void ForzarBordesMar(float[,] map, float mar = 0.0f)

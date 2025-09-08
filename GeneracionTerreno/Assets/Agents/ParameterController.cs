@@ -48,6 +48,11 @@ public class ParameterController : MonoBehaviour
     [SerializeField] private TMPro.TMP_InputField riverDepthFactor;
     [SerializeField] private TMPro.TMP_InputField riverSmoothRadius;
 
+    //Tree Parameters
+    [SerializeField] private TMPro.TMP_InputField TreeAmount;
+    [SerializeField] private TMPro.TMP_InputField TreeSpacing;
+    [SerializeField] private TMPro.TMP_InputField TreeMinHeight;
+
     private void Start()
     {
         // Inicializa los campos de entrada con los valores actuales del WorldGenerator
@@ -85,6 +90,10 @@ public class ParameterController : MonoBehaviour
         maxDist.text = worldGenerator.maxDist.ToString();
         riverDepthFactor.text = worldGenerator.riverDepthFactor.ToString();
         riverSmoothRadius.text = worldGenerator.riverSmoothRadius.ToString();
+
+        TreeAmount.text = worldGenerator.treeCount.ToString();
+        TreeSpacing.text = worldGenerator.treeSpacing.ToString();
+        TreeMinHeight.text = worldGenerator.minTreeHeight.ToString();
     }
 
     void Update()
@@ -127,6 +136,9 @@ public class ParameterController : MonoBehaviour
         worldGenerator.maxDist = int.Parse(maxDist.text);
         worldGenerator.riverDepthFactor = float.Parse(riverDepthFactor.text);
         worldGenerator.riverSmoothRadius = int.Parse(riverSmoothRadius.text);
+        worldGenerator.treeCount = int.Parse(TreeAmount.text);
+        worldGenerator.treeSpacing = float.Parse(TreeSpacing.text);
+        worldGenerator.minTreeHeight = float.Parse(TreeMinHeight.text);
     }
 
     public void GenerateWorld()

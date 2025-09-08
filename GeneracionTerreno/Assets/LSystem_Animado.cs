@@ -29,7 +29,7 @@ public class LSystem_Animado : MonoBehaviour
         StartCoroutine(RunAnimated());
     }
 
-    private IEnumerator RunAnimated()
+    public IEnumerator RunAnimated()
     {
         // 1) Precalcular secuencias por iteración (para poder animar por iteraciones si se desea)
         var sequences = new List<string>();
