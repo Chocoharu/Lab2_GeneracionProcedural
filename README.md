@@ -7,7 +7,7 @@ Este proyecto está desarrollado en Unity utlizando multiples agentes para la ge
 No necesitas instalar nada para probarlo.  
 El juego se ejecuta directamente desde itch.io en tu navegador.
 
-[Jugar en itch.io](https://TU-ENLACE-AQUI.itch.io/)
+[Jugar en itch.io]([https://TU-ENLACE-AQUI.itch.io/](https://infinyte.itch.io/proyecto-1-generacin-procedural))
 
 ## Control
 - **P** → Abrir el menú de cambio de variables.
