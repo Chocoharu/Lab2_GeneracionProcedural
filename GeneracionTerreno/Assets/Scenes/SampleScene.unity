@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &43252488
+--- !u!1 &251953661
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -133,6 +133,14 @@ GameObject:
   - component: {fileID: 43252490}
   m_Layer: 5
   m_Name: RiverSmoothRadius
+  - component: {fileID: 251953667}
+  - component: {fileID: 251953666}
+  - component: {fileID: 251953665}
+  - component: {fileID: 251953664}
+  - component: {fileID: 251953663}
+  - component: {fileID: 251953662}
+  m_Layer: 0
+  m_Name: Lsystem Animado
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7999,6 +8007,10 @@ GameObject:
   m_Component:
   - component: {fileID: 987235746}
   - component: {fileID: 987235745}
+  - component: {fileID: 987235747}
+  - component: {fileID: 987235750}
+  - component: {fileID: 987235749}
+  - component: {fileID: 987235748}
   m_Layer: 0
   m_Name: Lsystem
   m_TagString: Untagged
@@ -8019,14 +8031,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   axiom: X
-  iterations: 5
-  angle: 22.5
-  length: 3
+  iterations: 2
+  angle: 25
+  length: 2
   rules:
   - symbol: 88
-    replacement: F-[[X]+X]+F[+FX]-X
+    replacement: F[+X][-X][/X][\X]FX
   - symbol: 70
-    replacement: FF
+    replacement: 'F[+F][-F]'
+  container: {fileID: 987235747}
 --- !u!4 &987235746
 Transform:
   m_ObjectHideFlags: 0

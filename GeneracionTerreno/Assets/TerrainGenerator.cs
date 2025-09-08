@@ -138,7 +138,23 @@ public class TerrainGenerator : MonoBehaviour
                             }
                         }
                     }
-                    temp[x, y] = suma / cuenta;
+
+                    float promedio = suma / cuenta;
+
+                    float pendiente = Mathf.Abs(heightmap[x, y] - heightmap[Mathf.Clamp(x + 1, 0, width - 1), y]);
+
+                    if(pendiente > 0.05f)
+                    {
+
+                        temp[x, y] = (heightmap[x, y] + promedio) / 2f;
+                    }
+
+                    else
+                    {
+                        temp[x, y] = heightmap[x, y];
+                    }
+
+                    //temp[x, y] = heightmap[x, y];
                 }
             }
             heightmap = temp;
