@@ -24,19 +24,22 @@ public class UIManager : MonoBehaviour
     void OnGenerate()
     {
         currentLevel = BackwardsGenerator.Generate(8, 8, 3);
-        gridManager.GenerateLevel(currentLevel.grid);
+        gridManager.GenerateLevel(currentLevel);
     }
 
     void OnEvolve()
     {
-        es.InitializePopulation(8, 8, 3);
+        es.width = currentLevel.width;
+        es.height = currentLevel.height;
+        es.boxes = currentLevel.FindBoxes().Count;
+        es.InitializePopulation();
         currentLevel = es.Run();
-        gridManager.GenerateLevel(currentLevel.grid);
+        gridManager.GenerateLevel(currentLevel);
     }
 
     void OnRefine()
     {
         currentLevel = sa.Run(currentLevel);
-        gridManager.GenerateLevel(currentLevel.grid);
+        gridManager.GenerateLevel(currentLevel);
     }
 }
