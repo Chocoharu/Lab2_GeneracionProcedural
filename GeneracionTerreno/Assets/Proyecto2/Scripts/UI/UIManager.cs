@@ -98,7 +98,8 @@ public class UIManager : MonoBehaviour
 
     void OnEvolve()
     {
-        es.InitializePopulation(levelWidth, levelHeight, numBoxes);
+        if (currentLevel == null) return;
+        es.InitializePopulation(currentLevel, numBoxes); // Mantiene muros actuales
         currentLevel = es.Run();
         if (gridManager != null && currentLevel != null)
             gridManager.GenerateLevel(currentLevel.grid);

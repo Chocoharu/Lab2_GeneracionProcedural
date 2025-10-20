@@ -47,7 +47,7 @@ public class GridManager : MonoBehaviour
                         gridObjects[x, y] = Instantiate(goalPrefab, new Vector3(x, objY, y), Quaternion.identity, transform);
                         break;
                     case 4: // player
-                        objY = 1.1f;
+                        objY = 1.3f;
                         gridObjects[x, y] = Instantiate(playerPrefab, new Vector3(x, objY, y), Quaternion.identity, transform);
                         break;
                     default:

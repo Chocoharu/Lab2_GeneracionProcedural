@@ -139,6 +139,85 @@ public class BackwardsGenerator
         return level;
     }
 
+    // ✅ Versión mejorada: metas visibles + cajas distribuidas inteligentemente
+    public static LevelRepresentation FillBoxesAndGoals(LevelRepresentation baseLevel, int numBoxes)
+    {
+        var level = baseLevel.Clone();
+        var rnd = new System.Random();
+
+        int width = level.width;
+        int height = level.height;
+
+        // Limpiar metas y cajas antiguas
+        for (int x = 1; x < width - 1; x++)
+            for (int y = 1; y < height - 1; y++)
+                if (level.grid[x, y] == 2 || level.grid[x, y] == 3)
+                    level.grid[x, y] = 0;
+
+        // --- Paso 1: Colocar metas aleatorias ---
+        var goalPositions = new List<(int, int)>();
+        int attempts = 0;
+        while (goalPositions.Count < numBoxes && attempts < 500)
+        {
+            attempts++;
+            int gx = rnd.Next(1, width - 1);
+            int gy = rnd.Next(1, height - 1);
+            if (level.grid[gx, gy] == 0)
+            {
+                level.grid[gx, gy] = 3;
+                goalPositions.Add((gx, gy));
+            }
+        }
+
+        // --- Paso 2: Colocar cajas en celdas libres NO adyacentes a metas ---
+        int boxesPlaced = 0;
+        attempts = 0;
+        while (boxesPlaced < numBoxes && attempts < 2000)
+        {
+            attempts++;
+            int bx = rnd.Next(1, width - 1);
+            int by = rnd.Next(1, height - 1);
+
+            if (level.grid[bx, by] != 0) continue; // ya ocupada
+
+            // Verificar que no esté pegada a una meta (distancia Manhattan > 1)
+            bool tooClose = false;
+            foreach (var g in goalPositions)
+            {
+                if (Mathf.Abs(bx - g.Item1) + Mathf.Abs(by - g.Item2) <= 1)
+                {
+                    tooClose = true;
+                    break;
+                }
+            }
+            if (tooClose) continue;
+
+            level.grid[bx, by] = 2; // colocar caja
+            boxesPlaced++;
+        }
+
+        // --- Paso 3: Asegurar jugador ---
+        bool playerExists = false;
+        for (int x = 1; x < width - 1; x++)
+            for (int y = 1; y < height - 1; y++)
+                if (level.grid[x, y] == 4)
+                    playerExists = true;
+
+        if (!playerExists)
+        {
+            for (int x = 1; x < width - 1 && !playerExists; x++)
+                for (int y = 1; y < height - 1 && !playerExists; y++)
+                    if (level.grid[x, y] == 0)
+                    {
+                        level.grid[x, y] = 4;
+                        playerExists = true;
+                    }
+        }
+
+        return level;
+    }
+
+
     /// <summary>
     /// Comprueba si una coordenada (x,y) está dentro de los límites del grid.
     /// </summary>

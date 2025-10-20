@@ -69,6 +69,7 @@ public static class HeuristicEvaluator
             }
         }
 
+
         // 7) Convertir la distancia media a un valor de fitness entre 0 y 1.
         // La fórmula avgDist / (avgDist + 5) hace que el valor se normalice y tenga una saturación.
         // Incrementar avgDist da mayor fitness (según diseño del proyecto).
@@ -78,6 +79,26 @@ public static class HeuristicEvaluator
         // Cada penalización reduce el fitness multiplicándolo por exp(-0.3 * cornerPenalty).
         // El coeficiente 0.3 controla la severidad de la penalización.
         fitness *= Mathf.Exp(-0.3f * cornerPenalty);
+        int wallAdjacencyPenalty = 0;
+        for (int x = 1; x < width - 1; x++)
+        {
+            for (int y = 1; y < height - 1; y++)
+            {
+                if (level.grid[x, y] == 2) // caja
+                {
+                    // Contar muros adyacentes
+                    int adjacentWalls = 0;
+                    if (level.grid[x + 1, y] == 1) adjacentWalls++;
+                    if (level.grid[x - 1, y] == 1) adjacentWalls++;
+                    if (level.grid[x, y + 1] == 1) adjacentWalls++;
+                    if (level.grid[x, y - 1] == 1) adjacentWalls++;
+                    wallAdjacencyPenalty += adjacentWalls;
+                }
+            }
+        }
+
+        // Penalización exponencial por cajas pegadas a muros
+        fitness *= Mathf.Exp(-0.15f * wallAdjacencyPenalty);
 
         // 9) Asegurar que el resultado esté en [0,1]
         return Mathf.Clamp01(fitness);

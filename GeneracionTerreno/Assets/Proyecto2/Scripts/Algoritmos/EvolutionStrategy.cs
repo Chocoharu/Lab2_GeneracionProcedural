@@ -11,13 +11,14 @@ public class EvolutionStrategy
     private List<LevelRepresentation> population = new();
 
     // Inicializa la población con 'mu' individuos generados aleatoriamente
-    public void InitializePopulation(int width, int height, int boxes)
+    public void InitializePopulation(LevelRepresentation baseLevel, int boxes)
     {
         population.Clear();
         for (int i = 0; i < mu; i++)
         {
-            // Genera un nivel y lo añade a la población
-            population.Add(BackwardsGenerator.Generate(width, height, boxes));
+            var clone = baseLevel.Clone();
+            clone = BackwardsGenerator.FillBoxesAndGoals(clone, boxes);
+            population.Add(clone);
         }
     }
 
@@ -53,39 +54,45 @@ public class EvolutionStrategy
     // Realiza una mutación simple: mover una caja aleatoria a una casilla vacía adyacente
     private LevelRepresentation Mutate(LevelRepresentation level)
     {
-        var clone = level.Clone(); // trabajar sobre una copia
+        var clone = level.Clone();
         int attempts = 0;
         int width = level.width;
         int height = level.height;
 
-        // Recopilar posiciones de cajas (valor 2)
         var boxPositions = new List<(int x, int y)>();
-        for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
+        for (int x = 1; x < width - 1; x++)
+            for (int y = 1; y < height - 1; y++)
                 if (clone.grid[x, y] == 2) boxPositions.Add((x, y));
 
-        // Si no hay cajas, no hay mutación posible
         if (boxPositions.Count == 0) return clone;
 
-        // Intentar mover una caja hasta 10 veces
-        while (attempts < 10)
+        while (attempts < 20)
         {
             attempts++;
             var b = boxPositions[Random.Range(0, boxPositions.Count)];
             int dir = Random.Range(0, 4);
-            // Calcular nueva posición según dirección
             int nx = b.x + (dir == 0 ? 1 : dir == 1 ? -1 : 0);
             int ny = b.y + (dir == 2 ? 1 : dir == 3 ? -1 : 0);
 
-            // Evitar mover fuera de los límites o a bordes (paredes)
-            if (nx <= 0 || ny <= 0 || nx >= width - 1 || ny >= height - 1) continue;
+            // Evitar bordes
+            if (nx <= 1 || ny <= 1 || nx >= width - 2 || ny >= height - 2)
+                continue;
 
-            // Si la casilla destino está vacía (0), mover la caja
+            // Evitar celdas junto a muros
+            bool nearWall =
+                clone.grid[nx + 1, ny] == 1 ||
+                clone.grid[nx - 1, ny] == 1 ||
+                clone.grid[nx, ny + 1] == 1 ||
+                clone.grid[nx, ny - 1] == 1;
+
+            if (nearWall) continue;
+
+            // Mover si está libre
             if (clone.grid[nx, ny] == 0)
             {
                 clone.grid[b.x, b.y] = 0;
                 clone.grid[nx, ny] = 2;
-                break; // mutación realizada
+                break;
             }
         }
 
